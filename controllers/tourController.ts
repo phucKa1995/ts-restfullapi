@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Tour } from '../models/tourModel';
-import { APIFeatures } from '../ultis/index';
+import { AppError } from '../utils/appError';
+import { APIFeatures } from '../utils/index';
 
 export const aliasTopTours = (
   req: Request,
@@ -36,9 +37,16 @@ export const getAllTours = async (req: Request, res: Response) => {
   }
 };
 
-export const getTour = async (req: Request, res: Response) => {
+export const getTour = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const tour = await Tour.findOne({ _id: req.params.id });
+    const tour = await Tour.findOne({_id: req.params.id});
+    if (!tour) {
+      return new AppError('No tour found with that ID', 404);
+    }
     res.status(200).json({
       status: 'success',
       data: {
@@ -71,12 +79,19 @@ export const createTour = async (req: Request, res: Response) => {
   }
 };
 
-export const updateTour = async (req: Request, res: Response) => {
+export const updateTour = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const updateTour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
+    if (!updateTour) {
+      return new AppError('No tour found with that ID', 404);
+    }
     res.status(200).json({
       status: 'success',
       data: {

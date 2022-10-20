@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 import { User } from '../models/userModel';
 import { AppError } from '../utils/appError';
-
+import { getAll, getOne, updateOne, deleteOne } from './handleFactory';
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach((el) => {
@@ -10,16 +10,17 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-export const getAllUsers = async (req: Request, res: Response) => {
-  const users = await User.find();
+export const getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
 
-  // SEND RESPONSE
-  res.status(200).json({
+export const deleteMe = async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+
+  res.status(204).json({
     status: 'success',
-    results: users.length,
-    data: {
-      users,
-    },
+    data: null,
   });
 };
 export const updateMe = async (req, res, next) => {
@@ -50,36 +51,16 @@ export const updateMe = async (req, res, next) => {
   });
 };
 
-export const deleteMe = async (req, res, next) => {
-  await User.findByIdAndUpdate(req.user.id, { active: false });
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
+export const createUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not defined! Please use /signup instead',
   });
 };
 
-export const getUser = (req: Request, res: Response) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!',
-  });
-};
-export const createUser = (req: Request, res: Response) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!',
-  });
-};
-export const updateUser = (req: Request, res: Response) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!',
-  });
-};
-export const deleteUser = (req: Request, res: Response) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!',
-  });
-};
+export const getUser = getOne(User);
+export const getAllUsers = getAll(User);
+
+// Do NOT update passwords with this!
+export const updateUser = updateOne(User);
+export const deleteUser = deleteOne(User);
